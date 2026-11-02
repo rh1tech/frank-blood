@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifdef FRANK_BOARD
 #include <malloc.h>
 extern "C" unsigned int frank_heap_unclaimed(void);
+extern "C" void frank_resource_purge_all(void);
 #endif
 #include "choke.h"
 #include "config.h"
@@ -1241,6 +1242,9 @@ int16_t startang, startsectnum;
 void StartLevel(GAMEOPTIONS *gameOptions)
 {
     EndLevel();
+#ifdef FRANK_BOARD
+    frank_resource_purge_all();   // whole free blocks for the new level
+#endif
     gInput = {};
     gStartNewGame = 0;
     ready2send = 0;

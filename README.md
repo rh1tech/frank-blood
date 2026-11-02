@@ -105,6 +105,7 @@ An optional `/blood/frank.cfg` takes one `key=value` per line:
 | `ticks=4` | fixed game time per drawn frame (for benchmarks) |
 | `mix=3` | sound: bit 0 effects, bit 1 music |
 | `crc=1` | print a CRC of every drawn frame on the debug UART |
+| `memlog=1` | log the heap, sound arena and resource cache every 10 s |
 
 The game's own settings and saves go to `/blood` as well.
 

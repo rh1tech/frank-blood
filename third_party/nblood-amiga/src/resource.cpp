@@ -658,6 +658,40 @@ static void frankResourceReportOne(Resource &r, const char *name)
         if (r.dict[i].lockCount >= 1000000) r.dict[i].lockCount -= 1000000;
 }
 
+// Bytes the three caches hold: locked (in use) and purgeable (console `memlog`).
+extern "C" void frank_resource_totals(int *locked, int *purgeable)
+{
+    Resource *all[3] = { &gSysRes, &gSoundRes, &gGuiRes };
+    *locked = *purgeable = 0;
+    for (Resource *r : all)
+        for (unsigned int i = 0; i < r->count; i++)
+        {
+            DICTNODE *n = &r->dict[i];
+            if (!n->ptr) continue;
+            if (n->lockCount) *locked += n->size;
+            else *purgeable += n->size;
+        }
+}
+
+// A level change: free every resource not in use, sounds included, so the
+// freed blocks merge before the next level's big loads (the map is ~300 KB).
+// Freed one by one on demand instead, around the locked blocks, the heap
+// fragmented until a map no longer fitted (Out of memory after ~10 min).
+extern "C" void frank_resource_purge_all(void)
+{
+    for (CACHENODE *node = Resource::purgeHead.next; node != &Resource::purgeHead; )
+    {
+        CACHENODE *next = node->next;
+        if (node->lockCount == 0 && node->ptr)
+        {
+            frankResFree(node->ptr);
+            node->ptr = NULL;
+            Resource::RemoveMRU(node);
+        }
+        node = next;
+    }
+}
+
 static void frankResourceReport(void)
 {
     frankResourceReportOne(gSysRes, "BLOOD.RFF");

@@ -9,6 +9,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <malloc.h>
 #include <string.h>
 
 #include "pico/stdlib.h"
@@ -119,6 +120,7 @@ void frank_frame_shown(const uint8_t *frame) {
  *   mix=3        audio mixing: bit 0 effects, bit 1 music (benchmarks)
  *   crc=1        print every shown frame's CRC-32 from boot (compare with the host) */
 int frank_demo_menu = 1;
+static bool memlog_on;
 
 static void load_frank_cfg(void) {
     FIL f;
@@ -129,6 +131,7 @@ static void load_frank_cfg(void) {
         if (sscanf(line, "demomenu=%d", &v) == 1) frank_demo_menu = v;
         if (sscanf(line, "ticks=%d", &v) == 1) frank_fixed_ticks = v;
         if (sscanf(line, "crc=%d", &v) == 1) crc_on = v != 0;
+        if (sscanf(line, "memlog=%d", &v) == 1) memlog_on = v != 0;
         if (sscanf(line, "mix=%d", &v) == 1) { extern volatile uint32_t frank_mix_mask; frank_mix_mask = (uint32_t)v; }
     }
     f_close(&f);
@@ -172,6 +175,42 @@ static void cmd_key(int argc, char **argv) {
         for (int i = 0; i < 8; i++)
             if (!tapped[i].code) { tapped[i].code = code; tapped[i].up_at = time_us_64() + 100000; break; }
     }
+}
+
+/* memlog: every 10 s, how the PSRAM heap, the sound arena and the game's
+ * resource caches stand (hunting slow out-of-memory). */
+extern void frank_snd_stats(uint32_t *largest, uint32_t *total);
+extern void frank_resource_totals(int *locked, int *purgeable);
+extern uint32_t frank_heap_unclaimed(void);
+
+/* The largest block malloc can give now (binary search, 4 KB steps). */
+static uint32_t heap_largest(void) {
+    uint32_t lo = 0, hi = 8u << 20;
+    while (hi - lo > 4096) {
+        const uint32_t mid = (lo + hi) / 2;
+        void *p = malloc(mid);
+        if (p) { free(p); lo = mid; } else hi = mid;
+    }
+    return lo;
+}
+
+static void memlog_report(void) {
+    struct mallinfo mi = mallinfo();
+    uint32_t snd_largest, snd_free;
+    int locked, purgeable;
+    frank_snd_stats(&snd_largest, &snd_free);
+    frank_resource_totals(&locked, &purgeable);
+    printf("memlog t=%lu s: heap used %lu KB free %lu KB (+%lu KB unclaimed) largest %lu KB | "
+           "snd free %lu KB largest %lu KB | res locked %d KB purgeable %d KB\n",
+           (unsigned long)(time_us_64() / 1000000u), (unsigned long)(mi.uordblks >> 10),
+           (unsigned long)(mi.fordblks >> 10), (unsigned long)(frank_heap_unclaimed() >> 10),
+           (unsigned long)(heap_largest() >> 10), (unsigned long)(snd_free >> 10),
+           (unsigned long)(snd_largest >> 10), locked >> 10, purgeable >> 10);
+}
+
+static void cmd_memlog(int argc, char **argv) {
+    memlog_on = !(argc > 1 && !strcmp(argv[1], "off"));
+    memlog_report();
 }
 
 /* Rates over the last 2 s, updated by frank_service(). */
@@ -332,6 +371,7 @@ static const console_cmd_t cmds[] = {
     { "stat",   cmd_stat,   "stat [off]: print fps and memory every 2 s" },
     { "crc",    cmd_crc,    "crc [off]: print each shown frame's CRC-32" },
     { "ticks",  cmd_ticks,  "ticks <n>: timer advances n/120 s per frame (0 = real time)" },
+    { "memlog", cmd_memlog, "memlog [off]: heap, sound arena and resource cache every 10 s" },
     { "mem",    cmd_mem,    "memory use" },
     { "ls",     cmd_ls,     "ls [path]: list a directory on the microSD" },
     { "usb",    cmd_usb,    "what the USB host sees" },
@@ -365,6 +405,11 @@ void frank_service(void) {
             printf("stat: ");
             cmd_fps(0, NULL);
         }
+    }
+    static uint64_t memlog_last;
+    if (memlog_on && now - memlog_last >= 10000000) {
+        memlog_last = now;
+        memlog_report();
     }
     for (int i = 0; i < 8; i++)
         if (tapped[i].code && now >= tapped[i].up_at) {
