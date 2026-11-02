@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# frank-blood — pre-commit hook: refuses AI-tool files (.claude/, CLAUDE.md,
+# .cursor/, AGENTS.md...) and Blood game data (RFF, ART, maps, demos, the
+# data ZIP...) in a commit. Installed by tools/install-hooks.sh.
+#
+# Copyright (c) 2026 Mikhail Matveev <xtreme@rh1.tech>
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+bad=$(git diff --cached --name-only --diff-filter=ACMR | grep -iE \
+    -e '(^|/)\.claude(/|$)' -e '(^|/)CLAUDE(\.local)?\.md$' -e '(^|/)AGENTS\.md$' \
+    -e '(^|/)\.cursor(/|$)' -e '(^|/)\.cursorrules$' -e '(^|/)\.aider' -e '(^|/)\.github/copilot' \
+    -e '\.(rff|art|dem|map|ar_|smk|dat|wav|zip|uf2)$' -e '(^|/)blood\.ini$' -e '(^|/)cryptic\.ini$')
+
+if [ -n "$bad" ]; then
+    echo "pre-commit: these files must not be committed:" >&2
+    echo "$bad" | sed 's/^/  /' >&2
+    echo "unstage them (git restore --staged FILE)" >&2
+    exit 1
+fi
+exit 0
