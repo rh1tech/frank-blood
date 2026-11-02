@@ -1,15 +1,19 @@
 # frank-blood
 
 Blood, Monolith's 1997 shooter, running on a single RP2350. It plays on the
-FRANK Core 2 (on its master chip) and on the Murmulator / FRANK M2, with HDMI
-video, sound effects and FM music, and the game data on a microSD card.
+[FRANK](https://rh1.tech/projects/frank) Core 2 (on its master chip) and on
+the [Murmulator](https://murmulator.ru) / FRANK M2, with HDMI video, sound
+effects and FM music, and the game data on a microSD card.
 
 ![Welcome screen](screenshots/welcome.png)
 ![In the game](screenshots/gameplay.png)
 
-The game code is NBlood, a reverse-engineered Blood, in its Amiga flavour:
-BSzili's NBlood-Amiga, which moved NBlood from EDuke32 back onto Jonathon
-Fowler's JFBuild and its classic software renderer. That makes it small
+The game code is [NBlood](https://github.com/NBlood/NBlood), a
+reverse-engineered Blood, in its Amiga flavour: BSzili's
+[NBlood-Amiga](https://github.com/BSzili/NBlood-Amiga), which moved NBlood
+from EDuke32 back onto Jonathon Fowler's
+[JFBuild](https://github.com/jonof/jfbuild) and its classic software
+renderer. That makes it small
 enough for a microcontroller with 520 KB of SRAM and 8 MB of PSRAM.
 
 - 320x200 8-bit software rendering, shown doubled on 640x480 at 60 Hz HDMI
@@ -128,32 +132,45 @@ and the Mac build of the game used as a reference.
 ## Credits
 
 Blood
-- **Monolith Productions**: Blood (1997)
-- **Ken Silverman**: the Build engine
+- **[Monolith Productions](https://www.lith.com)**: Blood (1997)
+- **Ken Silverman**: the [Build engine](http://advsys.net/ken/build.htm)
 
 The game code
-- **Alexey "Nuke.YKT" Khokholov** and the NBlood contributors: NBlood, the
-  reverse-engineered Blood, and Blood-RE
-- **The EDuke32 team**: the engine work NBlood started from
-- **Szilárd "BSzili" Biró**: NBlood-Amiga, NBlood on JFBuild
-- **Jonathon Fowler**: JFBuild, JFAudioLib, JFMACT
+- **Alexey "Nuke.YKT" Khokholov** and the NBlood contributors:
+  [NBlood](https://github.com/NBlood/NBlood), the reverse-engineered Blood,
+  and [Blood-RE](https://github.com/NBlood/Blood-RE)
+- **The [EDuke32](https://www.eduke32.com) team**: the engine work NBlood
+  started from
+- **Szilárd "BSzili" Biró**: [NBlood-Amiga](https://github.com/BSzili/NBlood-Amiga),
+  NBlood on [JFBuild](https://github.com/BSzili/jfbuild/tree/amiga)
+- **Jonathon Fowler**: [JFBuild](https://github.com/jonof/jfbuild),
+  [JFAudioLib](https://github.com/jonof/jfaudiolib),
+  [JFMACT](https://github.com/jonof/jfmact)
 - **James R. Dose / Apogee Software**: the Apogee Sound System and the AL_MIDI
-  FM driver with its General MIDI timbre bank, here by way of Chocolate Blood
-- **Greg Kennedy**: libsmacker
+  FM driver with its General MIDI timbre bank, here by way of
+  [Chocolate Blood](https://github.com/NBlood/chocolate-blood)
+- **Greg Kennedy**: [libsmacker](https://github.com/greg-kennedy/libsmacker)
 
 Libraries and drivers
-- **Mitsutaka Okazaki and Graham Sanderson**: emu8950, the OPL emulator
-- **Raspberry Pi Ltd**: the Pico SDK and the I2S PIO program
-- **Ha Thach**: TinyUSB
-- **Ryan Wendland**: the Xbox controller driver (usb64)
-- **ChaN**: FatFs
-- **Elehobica**: the microSD SPI driver
-- **fboldog**: the HDMI data island encoder (rp2350-amiga)
+- **Mitsutaka Okazaki**: [emu8950](https://github.com/digital-sound-antiques/emu8950),
+  the OPL emulator; **Graham Sanderson**: its RP2040 version, from
+  [rp2040-doom](https://github.com/kilograham/rp2040-doom)
+- **Raspberry Pi Ltd**: the [Pico SDK](https://github.com/raspberrypi/pico-sdk)
+  and the I2S PIO program from [pico-extras](https://github.com/raspberrypi/pico-extras)
+- **Ha Thach**: [TinyUSB](https://github.com/hathach/tinyusb)
+- **Ryan Wendland**: the Xbox controller driver, from [usb64](https://github.com/Ryzee119/usb64)
+- **ChaN**: [FatFs](http://elm-chan.org/fsw/ff/)
+- **Elehobica**: the microSD SPI driver, from [pico_fatfs](https://github.com/elehobica/pico_fatfs)
+- **fboldog**: the HDMI data island encoder, from
+  [rp2350-amiga](https://github.com/fboldog/rp2350-amiga)
 
 RP2350 port
-- **Mikhail Matveev** <xtreme@rh1.tech>: the port to RP2350, the board
-  support (from frank-amiga), the boot shell (from frank-quake2), the sound
-  and music drivers and the speed work
+- **Mikhail Matveev** ([rh1.tech](https://rh1.tech), xtreme@rh1.tech): the
+  port to RP2350, the board support (from
+  [frank-amiga](https://github.com/rh1tech/frank-amiga)), the boot shell
+  (from [frank-quake2](https://github.com/rh1tech/frank-quake2)), the sound
+  and music drivers and the speed work. Sister port:
+  [frank-duke3d](https://github.com/rh1tech/frank-duke3d).
 
 ## License
 
@@ -162,7 +179,8 @@ frank-blood is released under the GNU General Public License, version 2
 licence of the whole.
 
 - The project's own code (`master/`, `common/`, `tools/`) is
-  Copyright (c) 2026 Mikhail Matveev, GPL-2.0-or-later.
+  Copyright (c) 2026 Mikhail Matveev ([rh1.tech](https://rh1.tech)),
+  GPL-2.0-or-later.
 - The Build engine is covered by Ken Silverman's licence
   (`third_party/nblood-amiga/jfbuild/buildlic.txt`), which allows
   non-commercial use only.
