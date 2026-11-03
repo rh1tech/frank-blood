@@ -214,9 +214,9 @@ static void poll_usb(void) {
         usbhid_get_mouse_state(&m);
         if (m.has_motion) {
             mousex += m.dx;
-            mousey += m.dy;
-            mouseb = m.buttons & 7;
+            mousey -= m.dy;   /* usbhid gives up = positive; Build wants USB's down = positive */
         }
+        mouseb = m.buttons & 7;   /* a click without motion too */
     }
 }
 

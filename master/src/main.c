@@ -514,6 +514,39 @@ void __attribute__((noreturn)) _exit(int status) {
     frank_reboot();
 }
 
+/* A CPU fault on core 0 (bad pointer, NULL from malloc...): the faulting PC
+ * and the fault registers on the UART and the error screen, then a restart.
+ * Without it the SDK's handler stops the core with HDMI still up: a frozen
+ * picture and no clue. */
+void __attribute__((used)) frank_fault_report(uint32_t *frame, uint32_t exc_return) {
+    const uint32_t cfsr = *(io_ro_32 *)0xE000ED28, hfsr = *(io_ro_32 *)0xE000ED2C;
+    const uint32_t mmfar = *(io_ro_32 *)0xE000ED34, bfar = *(io_ro_32 *)0xE000ED38;
+    printf("\nHARD FAULT core %u: pc %08lx lr %08lx sp %08lx | r0 %08lx r1 %08lx r2 %08lx r3 %08lx r12 %08lx\n"
+           "  cfsr %08lx hfsr %08lx mmfar %08lx bfar %08lx exc_return %08lx\n",
+           get_core_num(), (unsigned long)frame[6], (unsigned long)frame[5], (unsigned long)frame,
+           (unsigned long)frame[0], (unsigned long)frame[1], (unsigned long)frame[2],
+           (unsigned long)frame[3], (unsigned long)frame[4], (unsigned long)cfsr,
+           (unsigned long)hfsr, (unsigned long)mmfar, (unsigned long)bfar, (unsigned long)exc_return);
+    if (get_core_num() == 0) {
+        shell_error("GAME ERROR", "Restarting in 15 seconds");
+        shell_errorf("CPU fault at %08lx (cfsr %08lx, bfar %08lx).\nSee the UART console.\n",
+                     (unsigned long)frame[6], (unsigned long)cfsr, (unsigned long)bfar);
+        const uint64_t until = time_us_64() + 15000000;
+        while (time_us_64() < until) tight_loop_contents();
+    }
+    frank_reboot();
+}
+
+void __attribute__((naked)) isr_hardfault(void) {
+    __asm volatile(
+        "tst lr, #4\n"
+        "ite eq\n"
+        "mrseq r0, msp\n"
+        "mrsne r0, psp\n"
+        "mov r1, lr\n"
+        "b frank_fault_report\n");
+}
+
 /* errtest sd|data|game: show an error screen (bench: screenshots), then
  * restart after 8 s. */
 static void cmd_errtest(int argc, char **argv) {
